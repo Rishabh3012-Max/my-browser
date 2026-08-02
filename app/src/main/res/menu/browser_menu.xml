@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_bookmark_add"
+        android:title="Add Bookmark" />
+    <item
+        android:id="@+id/action_bookmarks"
+        android:title="Bookmarks" />
+    <item
+        android:id="@+id/action_history"
+        android:title="History" />
+    <item
+        android:id="@+id/action_find"
+        android:title="Find in Page" />
+    <item
+        android:id="@+id/action_share"
+        android:title="Share Page" />
+    <item
+        android:id="@+id/action_desktop_site"
+        android:title="Desktop Site"
+        android:checkable="true" />
+    <item
+        android:id="@+id/action_downloads"
+        android:title="Downloads" />
+    <item
+        android:id="@+id/action_dark_mode"
+        android:title="Toggle Dark Mode"
+        android:checkable="true" />
+    <item
+        android:id="@+id/action_clear_data"
+        android:title="Clear Browsing Data" />
+</menu>
