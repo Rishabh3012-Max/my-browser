@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/action_new_tab"
+        android:title="New Tab" />
+    <item
+        android:id="@+id/action_incognito"
+        android:title="New Incognito Tab" />
+    <item
         android:id="@+id/action_bookmark_add"
         android:title="Add Bookmark" />
     <item
