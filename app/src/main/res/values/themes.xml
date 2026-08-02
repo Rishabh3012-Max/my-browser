@@ -1,7 +1,9 @@
 <resources>
     <style name="Theme.MyBrowser" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">#6200EE</item>
-        <item name="colorPrimaryDark">#3700B3</item>
-        <item name="colorAccent">#03DAC5</item>
+        <item name="colorPrimary">@color/teal_primary</item>
+        <item name="colorPrimaryDark">@color/teal_dark</item>
+        <item name="colorAccent">@color/coral_accent</item>
+        <item name="android:windowBackground">@color/off_white</item>
+        <item name="android:statusBarColor">@color/teal_dark</item>
     </style>
 </resources>
