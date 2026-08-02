@@ -8,7 +8,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
@@ -28,6 +27,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 
 data class BrowserTab(
     val id: Int,
@@ -72,6 +74,7 @@ class MainActivity : AppCompatActivity() {
         val btnGo: ImageButton = findViewById(R.id.btnGo)
         val btnNewTab: ImageButton = findViewById(R.id.btnNewTab)
         val btnMenu: ImageButton = findViewById(R.id.btnMenu)
+        btnMenu.setImageResource(R.drawable.ic_dots_menu)
 
         btnGo.setOnClickListener { loadUrlFromBar() }
         etUrl.setOnEditorActionListener { _, _, _ -> loadUrlFromBar(); true }
@@ -146,22 +149,49 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.setDownloadListener { dUrl, _, contentDisposition, mimeType, _ ->
-            try {
-                val request = DownloadManager.Request(Uri.parse(dUrl))
-                request.setMimeType(mimeType)
-                val fileName = URLUtil.guessFileName(dUrl, contentDisposition, mimeType)
-                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-                val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                dm.enqueue(request)
-                Toast.makeText(this, "Download shuru: $fileName", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(this, "Download fail: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+            downloadAndView(dUrl, contentDisposition, mimeType)
         }
 
         webView.loadUrl(url)
         switchToTab(tabs.indexOf(tab))
+    }
+
+    private fun downloadAndView(url: String, contentDisposition: String, mimeType: String) {
+        Toast.makeText(this, "Download shuru ho raha hai...", Toast.LENGTH_SHORT).show()
+        val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
+
+        Thread {
+            try {
+                val connection = URL(url).openConnection() as HttpURLConnection
+                connection.connect()
+                val input = connection.inputStream
+                val file = File(cacheDir, fileName)
+                val output = file.outputStream()
+                input.copyTo(output)
+                output.close()
+                input.close()
+
+                try {
+                    val request = DownloadManager.Request(Uri.parse(url))
+                    request.setMimeType(mimeType)
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+                    val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                    dm.enqueue(request)
+                } catch (e: Exception) { }
+
+                runOnUiThread {
+                    val intent = Intent(this, ViewerActivity::class.java)
+                    intent.putExtra("file_path", file.absolutePath)
+                    intent.putExtra("mime_type", mimeType)
+                    startActivity(intent)
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this, "Download fail: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }.start()
     }
 
     private fun switchToTab(index: Int) {
