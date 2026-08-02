@@ -270,4 +270,62 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Find in Page")
             .setView(input)
-            .setPositiveButton("Find") { _, _ -> currentWebView()?.findAllA
+            .setPositiveButton("Find") { _, _ -> currentWebView()?.findAllAsync(input.text.toString()) }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun sharePage() {
+        val url = currentWebView()?.url ?: return
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        intent.putExtra(Intent.EXTRA_TEXT, url)
+        startActivity(Intent.createChooser(intent, "Share via"))
+    }
+
+    private fun toggleDesktopSite() {
+        isDesktopMode = !isDesktopMode
+        val wv = currentWebView() ?: return
+        val desktopUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+        wv.settings.userAgentString = if (isDesktopMode) desktopUA else null
+        wv.reload()
+    }
+
+    private fun openDownloads() {
+        try {
+            startActivity(Intent(DownloadManager.ACTION_VIEW_DOWNLOADS))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Downloads app nahi mila", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun toggleDarkMode() {
+        val current = prefs.getBoolean("dark_mode", false)
+        prefs.edit().putBoolean("dark_mode", !current).apply()
+        AppCompatDelegate.setDefaultNightMode(
+            if (!current) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        )
+    }
+
+    private fun clearBrowsingData() {
+        AlertDialog.Builder(this)
+            .setTitle("Clear Browsing Data")
+            .setMessage("History, cache, aur cookies delete ho jayenge. Confirm?")
+            .setPositiveButton("Clear") { _, _ ->
+                currentWebView()?.clearCache(true)
+                currentWebView()?.clearHistory()
+                CookieManager.getInstance().removeAllCookies(null)
+                prefs.edit().remove("history").apply()
+                Toast.makeText(this, "Data cleared!", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            currentWebView()?.let { if (it.canGoBack()) { it.goBack(); return true } }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+}
