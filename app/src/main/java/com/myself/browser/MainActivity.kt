@@ -14,6 +14,8 @@ import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -34,7 +36,6 @@ import java.net.URL
 data class BrowserTab(
     val id: Int,
     val webView: WebView,
-    val tabView: TextView,
     var title: String = "New Tab",
     val isIncognito: Boolean = false
 )
@@ -44,7 +45,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var etUrl: EditText
     private lateinit var progressBar: ProgressBar
     private lateinit var webViewContainer: FrameLayout
-    private lateinit var tabStrip: LinearLayout
+    private lateinit var tvTabCount: TextView
     private lateinit var prefs: android.content.SharedPreferences
 
     private val tabs = mutableListOf<BrowserTab>()
@@ -53,6 +54,12 @@ class MainActivity : AppCompatActivity() {
     private var isDesktopMode = false
 
     private val homeUrl = "file:///android_asset/home.html"
+
+    private val adDomains = listOf(
+        "doubleclick.net", "googlesyndication.com", "googleadservices.com",
+        "adservice.google.com", "ads.pubmatic.com", "adnxs.com",
+        "taboola.com", "outbrain.com", "popads.net", "propellerads.com"
+    )
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,20 +74,19 @@ class MainActivity : AppCompatActivity() {
         etUrl = findViewById(R.id.etUrl)
         progressBar = findViewById(R.id.progressBar)
         webViewContainer = findViewById(R.id.webViewContainer)
-        tabStrip = findViewById(R.id.tabStrip)
+        tvTabCount = findViewById(R.id.tvTabCount)
 
-        val btnBack: ImageButton = findViewById(R.id.btnBack)
-        val btnForward: ImageButton = findViewById(R.id.btnForward)
+        val btnHome: ImageButton = findViewById(R.id.btnHome)
         val btnGo: ImageButton = findViewById(R.id.btnGo)
         val btnNewTab: ImageButton = findViewById(R.id.btnNewTab)
+        val btnTabSwitch: ImageButton = findViewById(R.id.btnTabSwitch)
         val btnMenu: ImageButton = findViewById(R.id.btnMenu)
-        btnMenu.setImageResource(R.drawable.ic_dots_menu)
 
         btnGo.setOnClickListener { loadUrlFromBar() }
         etUrl.setOnEditorActionListener { _, _, _ -> loadUrlFromBar(); true }
-        btnBack.setOnClickListener { currentWebView()?.let { if (it.canGoBack()) it.goBack() } }
-        btnForward.setOnClickListener { currentWebView()?.let { if (it.canGoForward()) it.goForward() } }
+        btnHome.setOnClickListener { currentWebView()?.loadUrl(homeUrl) }
         btnNewTab.setOnClickListener { createTab(homeUrl, false) }
+        btnTabSwitch.setOnClickListener { showTabSwitcher() }
         btnMenu.setOnClickListener { showMenu(it) }
 
         createTab(homeUrl, false)
@@ -88,6 +94,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun currentWebView(): WebView? =
         if (activeTabIndex in tabs.indices) tabs[activeTabIndex].webView else null
+
+    private fun updateTabCount() {
+        tvTabCount.text = tabs.size.toString()
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun createTab(url: String, incognito: Boolean) {
@@ -107,32 +117,25 @@ class MainActivity : AppCompatActivity() {
 
         tabCounter++
         val id = tabCounter
-
-        val tabView = TextView(this)
-        tabView.text = if (incognito) "🕶 Tab $id" else "Tab $id"
-        tabView.setPadding(24, 16, 24, 16)
-        tabView.setTextColor(android.graphics.Color.WHITE)
-        tabView.textSize = 12f
-        val tabLayoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        tabLayoutParams.marginEnd = 8
-        tabView.layoutParams = tabLayoutParams
-        tabView.setOnLongClickListener { closeTabById(id); true }
-
-        val tab = BrowserTab(id, webView, tabView, "New Tab", incognito)
+        val tab = BrowserTab(id, webView, "New Tab", incognito)
         tabs.add(tab)
-        tabView.setOnClickListener { switchToTab(tabs.indexOf(tab)) }
-        tabStrip.addView(tabView)
+        updateTabCount()
 
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                val url = request?.url?.host ?: return super.shouldInterceptRequest(view, request)
+                if (adDomains.any { url.contains(it) }) {
+                    return WebResourceResponse("text/plain", "utf-8", null)
+                }
+                return super.shouldInterceptRequest(view, request)
+            }
+
             override fun onPageFinished(view: WebView?, pageUrl: String?) {
                 super.onPageFinished(view, pageUrl)
                 if (activeTabIndex >= 0 && tabs.getOrNull(activeTabIndex)?.id == id) {
                     etUrl.setText(if (pageUrl == homeUrl) "" else pageUrl)
                 }
                 tab.title = webView.title ?: "New Tab"
-                tabView.text = (if (incognito) "🕶 " else "") + tab.title.take(10)
                 if (!incognito && pageUrl != null && pageUrl.startsWith("http")) {
                     saveHistory(webView.title ?: pageUrl, pageUrl)
                 }
@@ -200,20 +203,25 @@ class MainActivity : AppCompatActivity() {
         webViewContainer.removeAllViews()
         webViewContainer.addView(tabs[index].webView)
         etUrl.setText(if (tabs[index].webView.url == homeUrl) "" else tabs[index].webView.url)
-        for (t in tabs) {
-            t.tabView.setBackgroundColor(
-                if (t.id == tabs[index].id) android.graphics.Color.parseColor("#0A5C5F")
-                else android.graphics.Color.TRANSPARENT
-            )
-        }
     }
 
-    private fun closeTabById(id: Int) {
-        val idx = tabs.indexOfFirst { it.id == id }
-        if (idx == -1) return
-        tabStrip.removeView(tabs[idx].tabView)
+    private fun showTabSwitcher() {
+        if (tabs.isEmpty()) return
+        val labels = tabs.map { (if (it.isIncognito) "🕶 " else "") + it.title.take(30) }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("Open Tabs (${tabs.size})")
+            .setItems(labels) { _, which -> switchToTab(which) }
+            .setNeutralButton("Close Current") { _, _ -> closeCurrentTab() }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun closeCurrentTab() {
+        if (activeTabIndex !in tabs.indices) return
+        val idx = activeTabIndex
         tabs[idx].webView.destroy()
         tabs.removeAt(idx)
+        updateTabCount()
         if (tabs.isEmpty()) {
             createTab(homeUrl, false)
         } else {
