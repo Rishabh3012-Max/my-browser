@@ -61,7 +61,7 @@
             android:layout_height="44dp"
             android:padding="10dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_new_tab" />
+            android:src="@drawable/ic_home" />
 
         <FrameLayout
             android:layout_width="44dp"
