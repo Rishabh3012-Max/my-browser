@@ -3,62 +3,54 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/off_white">
-
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/teal_dark">
-
-        <LinearLayout
-            android:id="@+id/tabStrip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="4dp" />
-
-    </HorizontalScrollView>
+    android:background="#1A1A1A">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp"
+        android:padding="10dp"
         android:gravity="center_vertical"
-        android:background="@color/teal_primary">
+        android:background="#1A1A1A">
 
         <ImageButton
-            android:id="@+id/btnBack"
+            android:id="@+id/btnHome"
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:background="@android:color/transparent"
-            android:src="@android:drawable/ic_media_previous" />
+            android:src="@drawable/ic_home" />
 
-        <ImageButton
-            android:id="@+id/btnForward"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@android:color/transparent"
-            android:src="@android:drawable/ic_media_next" />
-
-        <EditText
-            android:id="@+id/etUrl"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Search or type URL"
-            android:textColorHint="@color/off_white"
-            android:textColor="@android:color/white"
-            android:inputType="textUri"
-            android:singleLine="true"
-            android:imeOptions="actionGo" />
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/pill_search_bg"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp">
 
-        <ImageButton
-            android:id="@+id/btnGo"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@android:color/transparent"
-            android:src="@android:drawable/ic_menu_search" />
+            <EditText
+                android:id="@+id/etUrl"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Search or type URL"
+                android:textColorHint="#AAAAAA"
+                android:textColor="#FFFFFF"
+                android:background="@android:color/transparent"
+                android:inputType="textUri"
+                android:singleLine="true"
+                android:imeOptions="actionGo" />
+
+            <ImageButton
+                android:id="@+id/btnGo"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_menu_search" />
+        </LinearLayout>
 
         <ImageButton
             android:id="@+id/btnNewTab"
@@ -67,20 +59,47 @@
             android:background="@android:color/transparent"
             android:src="@android:drawable/ic_input_add" />
 
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="36dp">
+            <ImageButton
+                android:id="@+id/btnTabSwitch"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_tab_count" />
+            <TextView
+                android:id="@+id/tvTabCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="1"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
         <ImageButton
             android:id="@+id/btnMenu"
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:background="@android:color/transparent"
-            android:src="@android:drawable/ic_menu_more" />
+            android:src="@drawable/ic_dots_menu" />
 
     </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/tabStrip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone" />
 
     <ProgressBar
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="4dp"
+        android:layout_height="3dp"
         android:max="100"
         android:visibility="gone" />
 
